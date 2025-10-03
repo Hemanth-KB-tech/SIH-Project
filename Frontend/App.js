@@ -1,28 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 function App() {
-  const [students, setStudents] = useState([]);
-  const [selectedStudent, setSelectedStudent] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    skills: "",
+    location: "",
+  });
   const [recommendations, setRecommendations] = useState([]);
 
-  useEffect(() => {
-    axios
-      .get("http://127.0.0.1:5000/students")
-      .then((res) => {
-        if (Array.isArray(res.data)) setStudents(res.data);
-        else console.error("Unexpected response:", res.data);
-      })
-      .catch((err) => console.error("Error fetching students:", err));
-  }, []);
+  // handle form input changes
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
+  // submit student details
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!selectedStudent) return;
 
     axios
-      .post("http://127.0.0.1:5000/recommend", { student_id: parseInt(selectedStudent, 10) })
+      .post("http://127.0.0.1:5000/recommend", formData)
       .then((res) => {
         if (Array.isArray(res.data)) setRecommendations(res.data);
         else console.error("Unexpected response:", res.data);
@@ -42,33 +43,58 @@ function App() {
       <div className="container" style={{ maxWidth: "900px" }}>
         <div className="text-center mb-5">
           <h1 className="text-white fw-bold">🎓 Student Internship Matcher</h1>
-          <p className="text-light">Find the best internships for your skills and location</p>
+          <p className="text-light">
+            Enter your details to find the best internships for your skills and location
+          </p>
         </div>
 
-        {/* Student Selection Form */}
-        <form className="d-flex mb-4" onSubmit={handleSubmit}>
-          <select
-            className="form-select me-2"
-            value={selectedStudent}
-            onChange={(e) => setSelectedStudent(e.target.value)}
-          >
-            <option value="">-- Select a student --</option>
-            {students.map((student) => (
-              <option key={student.student_id} value={student.student_id}>
-                {student.name} (ID: {student.student_id})
-              </option>
-            ))}
-          </select>
-          <button type="submit" className="btn btn-primary">
-            Find Internships
-          </button>
+        {/* Student Details Form */}
+        <form className="row g-3 mb-4" onSubmit={handleSubmit}>
+          <div className="col-md-4">
+            <input
+              type="text"
+              className="form-control"
+              name="name"
+              placeholder="Your Name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="col-md-4">
+            <input
+              type="text"
+              className="form-control"
+              name="skills"
+              placeholder="Your Skills (comma separated)"
+              value={formData.skills}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="col-md-4">
+            <input
+              type="text"
+              className="form-control"
+              name="location"
+              placeholder="Preferred Location"
+              value={formData.location}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="col-12 text-center">
+            <button type="submit" className="btn btn-primary">
+              Find Internships
+            </button>
+          </div>
         </form>
 
         {/* Recommendations */}
         <h3 className="text-white mb-4">Recommended Internships:</h3>
 
         {recommendations.length === 0 ? (
-          <p className="text-light">No recommendations yet. Select a student above.</p>
+          <p className="text-light">No recommendations yet. Enter your details above.</p>
         ) : (
           <div className="row">
             {recommendations.map((rec, idx) => (
